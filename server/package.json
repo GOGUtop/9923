@@ -1,0 +1,1 @@
+{"name":"gougu-xixi-api","version":"1.0.0","type":"commonjs","scripts":{"start":"node xixi_api_server.js"},"dependencies":{"express":"^4.19.2","cors":"^2.8.5"}}
