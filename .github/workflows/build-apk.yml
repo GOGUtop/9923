@@ -1,0 +1,46 @@
+name: Build GouGu Cloud Local APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Node 20 for preparing SillyTavern
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Prepare embedded Node.js Mobile
+        run: python3 tools/prepare_node_mobile.py
+      - name: Prepare embedded SillyTavern from official GitHub
+        run: python3 tools/prepare_sillytavern.py
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android build tools
+        run: |
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools" "cmake;3.22.1" "ndk;27.2.12479018"
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug --stacktrace --no-daemon
+      - name: Collect APK
+        run: |
+          mkdir -p github-apk-output
+          cp app/build/outputs/apk/debug/*.apk github-apk-output/狗骨本地酒馆-cloud-local-v1-1-crashfix-debug.apk
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 狗骨本地酒馆-cloud-local-v1-1-crashfix-debug-apk
+          path: github-apk-output/*.apk
